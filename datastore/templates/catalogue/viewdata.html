@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Demo{% endblock %}
+
+{% block backLink %}
+<a href="/" class="govuk-back-link">Back</a>
+{% endblock %}
+
+{% block content %}
+<link href="{{ url_for('static', filename='data-tables.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='data-tables.js') }}"></script>
+<style>
+    li {
+        margin-bottom: 10px;
+    }
+
+    div.data-table-data {
+        position: relative;
+        clear: both;
+        overflow-x: scroll;
+        overflow-y: auto;
+        min-height: 300px;
+        max-height: 500px;
+    }
+
+    div.data-table-data table {
+        width: 100%;
+        font-size: 14px;
+    }
+</style>
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-full govuk-body">
+        {% if not data.empty %}
+        <h1 class="govuk-heading-m">{{ upload_title }} - {{ time_covered }}</h1>
+
+        <div class="data-table-data">
+            <table id="rawdata" class="govuk-table-s table_container">
+                <thead>
+                    <tr>
+                        {% for column in columns %}
+                        <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        {% for column in columns %}
+                        <td>{{ row[loop.index0] }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <ul>
+            <li><a href="https://api.equality-data-store.cabinetoffice.gov.uk/data?bucket={{ bucket }}&key={{ key_value }}&download=json" target="_blank" class="govuk-link">Download this dataset as JSON</a></li>
+            <li><a href="https://api.equality-data-store.cabinetoffice.gov.uk/data?bucket={{ bucket }}&key={{ key_value }}&download=csv" target="_blank" class="govuk-link">Download this dataset as CSV</a></li>
+            <li><a href="https://api.equality-data-store.cabinetoffice.gov.uk/data?bucket={{ bucket }}&key={{ key_value }}&return_type=json" target="_blank" class="govuk-link">Import this dataset as JSON</a></li>
+            <li><a href="https://api.equality-data-store.cabinetoffice.gov.uk/data?bucket={{ bucket }}&key={{ key_value }}&return_type=csv" target="_blank" class="govuk-link">Import this dataset as CSV</a></li>
+            <li><a href="../datacleaning" class="govuk-link">Clean this dataset</a></li>
+        </ul>
+        {% endif %}
+    </div>
+</div>
+<script>
+    (function () {
+        new DataTable('table_container', 'array', true, true, true, false)
+    })()
+</script>
+{% endblock %}

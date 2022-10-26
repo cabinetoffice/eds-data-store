@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Demo{% endblock %}
+
+{% block backLink %}
+<a href="/" class="govuk-back-link">Back</a>
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form method="post" enctype="multipart/form-data"
+            onsubmit="document.getElementById('submit').style.display = 'none'; document.getElementById('loading').style.display = 'inline-block';">
+            <div class="govuk-form-group {{ 'govuk-form-group--error' if form.errors }} govuk-!-margin-bottom-2">
+                <label for="documents" class="govuk-label govuk-label--m">
+                    Upload csv
+                </label>
+                <div id="documents-hint" class="govuk-hint">
+                    The files must be a CSV and be smaller than 10MB
+                </div>
+
+                <input id="file" type="file" name="file" accept=".csv"
+                    class="govuk-file-upload govuk-!-margin-bottom-4">
+            </div>
+
+
+
+
+
+Title
+Description
+Measure title
+Topic
+Sub topic
+Lowest level of geography
+Type of statistic
+Frequency of release
+Time covered
+Upload title
+Upload filename
+S3 path
+Filesize
+
+
+
+
+
+
+
+            <img id="loading" src="{{ url_for('static', filename='assets/images/loading.gif') }}" width="41" height="41"
+                style="display: none; margin-bottom: 20px;" alt="">
+            <input id="submit" type="submit" name="button_clicked" value="Upload file" class="govuk-button"
+                data-module="govuk-button">
+        </form>
+    </div>
+</div>
+{% endblock %}

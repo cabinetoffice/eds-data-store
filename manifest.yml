@@ -1,0 +1,7 @@
+---
+applications:
+  - memory: 256M
+    buildpacks:
+      - python_buildpack
+      - r_buildpack
+    command:  ./prod.sh

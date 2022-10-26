@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  datastore_db:
+    image: "postgres:13.5"
+    container_name: "datastore_db"
+    ports:
+      - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=datastore
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST=datastore_db
+
+  datastore_cache:
+    image: "redis:6.2-alpine"
+    container_name: "datastore_cache"
+    restart: always
+    ports:
+      - "6379:6379"
+    #command: redis-server --save 20 1 --loglevel warning --requirepass password
+    command: redis-server --save 20 1 --loglevel warning
+    volumes: 
+      - dbcache:/data
+
+  datastore_app:
+    container_name: "datastore_app"
+    build:
+      context: .
+    ports:
+      - 5000:5000
+    env_file: .env
+    volumes:
+      - ./:/app
+    entrypoint: dockerize -wait tcp://datastore_db:5432
+    depends_on:
+      - datastore_db
+      - datastore_cache
+    command: /app/run.sh
+
+volumes:
+  dbdata:
+  dbcache:

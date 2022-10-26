@@ -1,0 +1,175 @@
+.table_container {
+    /*overflow: hidden;*/
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table_container thead tr th {
+    display: table-cell;
+}
+
+.table_container .table_row {
+    display: flex;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table_container .table_row .table_column {
+    position: relative;
+    /*display: flex;*/
+    justify-content: top;
+    align-items: left;
+    width: auto;
+    min-width: 10px;
+    padding: 2px;
+
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+    background-color: #fff;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /*flex: 1;*/
+}
+
+.table_container .table_row:first-child .table_column {
+    border-top: 1px solid #000;
+    overflow-x: hidden;
+    overflow-y: visible;
+}
+
+.table_container .table_row .table_column:first-child {
+    border-left: 1px solid #000;
+}
+
+.table_container tbody .table_row:first-child .table_column {
+    border-top: none;
+}
+
+.table_container .table_row .table_column span.table_drag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 2px;
+    height: 100%;
+    background-color: #ddd;
+    border-left: 1px solid #000;
+    cursor: ew-resize;
+}
+
+.icons {
+    position: absolute;
+    right: 3px;
+    top: 10%;
+    height: 75%;
+    overflow: hidden;
+    visibility: hidden;
+}
+
+.icons svg {
+    height: 100%;
+}
+
+.icons svg:hover polygon[fill="#fff"] {
+    fill: #ddd;
+}
+
+.sort_icon, .filter_icon {
+    /*position: absolute;*
+    float: right;
+    top: 1;*/
+    margin-right: 7px;
+    /*right: 35px;*/
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.filter_icon {
+    /*right: 10px;*/
+}
+
+.sort_icon.active svg polygon, .filter_icon.active svg polygon {
+    stroke: #555;
+    fill: #555;
+}
+
+.sort_icon.activeasc svg polygon.asc {
+    fill: #555;
+}
+
+.sort_icon.activedesc svg polygon.desc {
+    fill: #555;
+}
+
+.sort_icon svg polygon, .filter_icon svg polygon {
+    stroke: #aaa;
+}
+
+.filter {
+    position: absolute;
+    display: none;
+    left: -1px;
+    width: calc(100% - 6px);
+    height: auto;
+    max-height: 300px;
+    padding: 3px;
+    background-color: #fff;
+    border: 1px solid #000;
+    border-top: none;
+    overflow: hidden;
+    z-index: 3;
+}
+
+.filter table {
+    width: 100%;
+}
+
+.filter table tr td {
+    padding: 2px;
+    vertical-align: top;
+    text-align: left;
+}
+
+.filter > input {
+    margin: 0;
+    width: calc(100% - 25px);
+    padding: 5px;
+}
+
+.filter ul {
+    margin: 0;
+    padding: 0;
+    max-height: 180px;
+    overflow-y: auto;
+    list-style-type: none;
+    text-align: left;
+    font-weight: normal;
+}
+
+.filter ul li label {
+    display: block;
+    padding: 3px;
+    cursor: pointer;
+}
+
+.filter ul li label:hover {
+    background-color: #eee;
+}
+
+.filter ul li p {
+    margin: 0;
+    padding: 7px;
+    color: #aaa;
+    font-style: italic;
+}
+
+.filter table tr:first-child td:first-child {
+    width: 20px;
+}
+
+.filter table tr:first-child td:last-child {
+    width: calc(100% - 20px);
+}

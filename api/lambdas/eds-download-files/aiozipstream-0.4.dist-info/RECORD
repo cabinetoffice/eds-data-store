@@ -1,0 +1,13 @@
+aiozipstream-0.4.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+aiozipstream-0.4.dist-info/METADATA,sha256=S_WzrrkBQyN9rNrhMYn0c7VEp2hpKIsFEBHaK0F77zc,5520
+aiozipstream-0.4.dist-info/RECORD,,
+aiozipstream-0.4.dist-info/REQUESTED,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
+aiozipstream-0.4.dist-info/WHEEL,sha256=kGT74LWyRUZrL4VgLh6_g12IeVl_9u9ZVhadrgXZUEY,110
+aiozipstream-0.4.dist-info/top_level.txt,sha256=s0WV3X6R8MzOwkW7hGhdOThHiqw20INl8g6W1Ofya0c,10
+zipstream/__init__.py,sha256=Wjm8bBqg5Vj3RyuPTAq_FOxyC4rw8Ny9k3Es4pUxWHI,232
+zipstream/__init__.pyc,,
+zipstream/aiozipstream.py,sha256=G0NjdzDHqJV2hAzkMWSrYngg32R-djqcisaBd0vPB7I,3045
+zipstream/consts.py,sha256=PzDliNrjk7I8Agb_z0sjl-ddq6Kic9Mhmpeo4lYi8x4,2027
+zipstream/consts.pyc,,
+zipstream/zipstream.py,sha256=_FIpp25yfaR9ZHgpCpRZonm91C1c6Yec8mGvoePcax8,10750
+zipstream/zipstream.pyc,,

@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+
+{% block title %}Demo{% endblock %}
+
+{% block backLink %}
+<a href="/" class="govuk-back-link">Back</a>
+{% endblock %}
+
+{% block content %}
+<link href="{{ url_for('static', filename='data-tables.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='data-tables.js') }}"></script>
+<style>
+    div.data-table-data {
+        position: relative;
+        clear: both;
+        overflow-x: scroll;
+        overflow-y: auto;
+        min-height: 300px;
+        max-height: 500px;
+    }
+
+    div.data-table-data div.loading {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 300px;
+        max-height: 500px;
+        background: rgba(255, 255, 255, 0.8);
+        z-index: 99;
+    }
+
+    div.data-table-data table {
+        width: 100%;
+        font-size: 14px;
+    }
+
+    a.add-option {
+        display: inline-block;
+        margin: 10px 20px 30px 0;
+    }
+</style>
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form method="post"
+            onsubmit="document.getElementById('submit').style.display = 'none'; document.getElementById('loading').style.display = 'inline-block';">
+            <div class="govuk-form-group {{ 'govuk-form-group--error' if form.errors }} govuk-!-margin-bottom-2">
+                <label for="documents" class="govuk-label govuk-label--m">
+                    Search
+                </label>
+
+                <input id="query" type="text" name="query" value="{{ query }}"
+                    class="govuk-input govuk-!-margin-bottom-4">
+            </div>
+            <p id="advanced-search"><a href="#" class="govuk-link" onclick="addOption()">Advanced search</a></p>
+            <div id="options"></div>
+
+            <img id="loading" src="{{ url_for('static', filename='assets/images/loading.gif') }}" width="41" height="41"
+                style="display: none; margin-bottom: 20px;" alt="">
+            <input id="submit" type="submit" name="button_clicked" value="Search" class="govuk-button"
+                data-module="govuk-button">
+        </form>
+        {% if query != '' and not data %}
+        <p class="govuk-body">No datasets found matching your search, please try again</p>
+        {% endif %}
+    </div>
+    {% if data %}
+    <div class="govuk-grid-column-full govuk-body">
+        <form id="catalogue" method="POST" action="">
+            <div class="data-table-data">
+                <!--<div id="loading" class="loading">
+                    <img id="loading" src="{{ url_for('static', filename='assets/images/loading.gif') }}" width="60" height="60" alt=""> TODO
+                </div>-->
+                <table class="govuk-table-s table_container">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Time period</th>
+                            <th>Topic</th>
+                            <th>Publisher</th>
+                            <th>Geography</th>
+                            <th>Characteristics</th>
+                            <th>File size</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data %}
+                        <tr>
+                            <td><input type="checkbox" name="key_value" value="{{ row.key_value }}" onclick="enableDownload()">
+                                <a href="{{ url_for('api.viewData', file=row.id) }}" class="govuk-link">{{ row.title }}</a></td>
+                            <td>{{ row.time_covered }}</td>
+                            <td>{{ row.topic }}</td>
+                            <td>{{ row.publisher_name }}</td>
+                            <td>{{ row.lowest_level_of_geography }}</td>
+                            <td>{{ row.characteristics }}</td>
+                            <td>{{ row.filesize }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <input type="hidden" name="bucket" value="{{ data[0].bucket }}">
+
+            <button id="download" type="button" class="govuk-button" style="display: none; margin-top: 20px;" onclick="downloadFiles()">
+                Download checked files
+            </button>
+        </form>
+        <script>
+            function enableDownload() {
+                document.getElementById('download').style.display = 'none'
+                let keys = []
+                let items = document.getElementById('catalogue').querySelectorAll('input[type="checkbox"]')
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].checked) {
+                        keys.push(items[i].value)
+                    }
+                }
+                if (keys.length > 0) {
+                    document.getElementById('download').style.display = 'block'
+                }
+            }
+
+            function downloadFiles() {
+                let keys = []
+                let items = document.getElementById('catalogue').querySelectorAll('input[type="checkbox"]')
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].checked) {
+                        keys.push(items[i].value)
+                    }
+                }
+                if (keys.length > 0) {
+                    window.open(`https://api.equality-data-store.cabinetoffice.gov.uk/data?bucket={{ data[0].bucket }}&key=${keys.join(',')}&return_type=csv`)
+                }
+            }
+        </script>
+
+        {# <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-default">
+            {% for row in data %}
+            <div class="govuk-accordion__section">
+                <div class="govuk-accordion__section-header">
+                    <h2 class="govuk-accordion__section-heading"
+                        style="display: inline-block; width: 80%; max-width: 80%;">
+                        <span class="govuk-accordion__section-button" id="accordion-default-heading-{{ loop.index }}">
+                            {{ row.upload_title }}
+                        </span>
+                    </h2>
+                    <p style="display: inline-block; width: 10%; max-width: 10%;">
+                        {{ row.time_covered }}
+                    </p>
+                </div>
+                <div id="accordion-default-content-{{ loop.index }}" class="govuk-accordion__section-content"
+                    aria-labelledby="accordion-default-heading-{{ loop.index }}">
+                    <form method="POST" action="{{ url_for('api.viewData', file=row.id) }}">
+                        <table class="govuk-table">
+                            <tbody class="govuk-table__body">
+                                <tr class="govuk-table__row">
+                                    <th scope="row" class="govuk-table__header">Topic</th>
+                                    <td class="govuk-table__cell">{{ row.topic }} {{ row.subtopic }}</td>
+                                </tr>
+                                <tr class="govuk-table__row">
+                                    <th scope="row" class="govuk-table__header">Lowest level of geography</th>
+                                    <td class="govuk-table__cell">{{ row.lowest_level_of_geography }}</td>
+                                </tr>
+                                <tr class="govuk-table__row">
+                                    <th scope="row" class="govuk-table__header">Publisher</th>
+                                    <td class="govuk-table__cell">{{ row.publisher_name }}</td>
+                                </tr>
+                                <tr class="govuk-table__row">
+                                    <th scope="row" class="govuk-table__header">Filesize</th>
+                                    <td class="govuk-table__cell">{{ row.filesize }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <input type="hidden" name="bucket" value="{{ row.bucket }}">
+                        <input type="hidden" name="key_value" value="{{ row.key_value }}">
+                        <button type="submit" class="govuk-button">
+                            View data
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div> #}
+    </div>
+    {% endif %}
+</div>
+<script>
+    let numOptions = 0
+    function addOption(selectedOption = '', selectedValue = '') {
+        const options = ['', 'Area covered', 'Ethnicity classification', 'Lowest level of geography', 'Publisher', 'Publisher type', 'Release frequency', 'Topic', 'Subtopic', 'Type of statistic', 'Characteristics']
+
+        function createDiv() {
+            const div = document.createElement('div')
+            div.style.display = 'inline-block'
+            div.style.width = '45%'
+            return div
+        }
+
+        numOptions += 1
+        const el = document.getElementById('options')
+        const id = numOptions //el.childNodes.length
+        const div = document.createElement('div')
+        div.id = `option${id}`
+
+        const div1 = createDiv()
+        const select1 = document.createElement('select')
+        select1.id = `options${id}`
+        select1.name = `options${id}`
+        select1.classList.add('govuk-select')
+        select1.setAttribute('onchange', `addOptions('${id}', '${selectedValue}')`)
+        let selected = -1
+        for (const [index, option] of options.entries()) {
+            const selectOption = document.createElement('option')
+            selectOption.value = option.toLowerCase().replace(/ /g, '_')
+            selectOption.text = option
+            if (selectedOption != '' && selectedOption == option.toLowerCase().replace(/ /g, '_')) {
+                selected = index
+            }
+            select1.appendChild(selectOption)
+        }
+
+        div1.appendChild(select1)
+        div.appendChild(div1)
+
+        const div2 = createDiv()
+        const select2 = document.createElement('select')
+        select2.id = `values${id}`
+        select2.name = `values${id}`
+        select2.classList.add('govuk-select')
+        select2.style.visibility = 'hidden'
+        div2.appendChild(select2)
+        div.appendChild(div2)
+
+        const a1 = document.createElement('a')
+        a1.href='#'
+        a1.classList.add('govuk-link')
+        a1.classList.add('add-option')
+        a1.setAttribute('onclick', `removeOption(${id})`)
+        a1.text = 'Remove this option'
+        div.appendChild(a1)
+
+        const a2 = document.createElement('a')
+        a2.id = `another${id}`
+        a2.href='#'
+        a2.classList.add('govuk-link')
+        a2.classList.add('add-option')
+        a2.style.visibility = 'hidden'
+        a2.setAttribute('onclick', 'addOption()')
+        a2.text = 'Add another option'
+        div.appendChild(a2)
+
+        el.appendChild(div)
+        document.getElementById('advanced-search').style.display = 'none'
+        if (selected > -1) {
+            select1.selectedIndex = selected
+            addOptions(id, selectedValue)
+        }
+    }
+
+    function addOptions(id, selectedValue = '') {
+        let select1 = document.getElementById(`options${id}`)
+        let select2 = document.getElementById(`values${id}`)
+
+        function removeOptions() {
+            while (select2.options.length > 0) {
+                select2.remove(0)
+            }
+        }
+
+        function createOptions(el, options) {
+            removeOptions()
+            selected = -1
+            for (const [index, option] of options.entries()) {
+                createOption(option.value, option.id + ' - ' + option.value)
+                if (selectedValue != '' && selectedValue == option.value) {
+                    selected = index
+                }
+            }
+            document.getElementById(`another${el}`).style.visibility = 'visible'
+            if (selected > -1) {
+                select2.selectedIndex = selected
+            }
+        }
+
+        function createOption(value, text) {
+            const selectOption = document.createElement('option')
+            selectOption.value = value
+            selectOption.text = text
+            select2.appendChild(selectOption)
+        }
+
+        removeOptions()
+        if (select1.selectedIndex == 0) {
+            createOption('', 'Choose an option...')
+            document.getElementById(`another${id}`).style.visibility = 'hidden'
+        } else {
+            createOption('', 'Loading...')
+            select2.style.visibility = 'visible'
+            const category = select1.options[select1.selectedIndex].value
+            if (localStorage.getItem(`options_${category}`)) {
+                createOptions(id, JSON.parse(localStorage.getItem(`options_${category}`)))
+            } else {
+                fetch(`https://api.equality-data-store.cabinetoffice.gov.uk/categories?key=${category}`)//, { mode: 'no-cors'})
+                    .then(response => response.json())
+                    .then(options => {
+                        localStorage.setItem(`options_${category}`, JSON.stringify(options))
+                        createOptions(id, options)
+                    })
+                    .catch((err) => {
+                        console.log(`ERROR: ${err}`)
+                    })
+            }
+        }
+    }
+
+    function removeOption(option) {
+        const el = document.getElementById(`option${option}`)
+        el.parentNode.removeChild(el)
+        if (document.getElementById('options').childNodes.length == 0) {
+            document.getElementById('advanced-search').style.display = 'block'
+        }
+    }
+
+    function populateOptions() {
+        const options = {{ options | safe }}
+        for (const option of options) {
+            addOption(option.option, option.value)
+        }
+    }
+
+    (function () {
+        populateOptions()
+        new DataTable('table_container', 'array', true, true, true, false)
+    })()
+</script>
+{% endblock %}

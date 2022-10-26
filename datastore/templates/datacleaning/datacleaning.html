@@ -1,0 +1,664 @@
+{% extends 'base.html' %}
+
+{% block title %}Demo{% endblock %}
+
+{% block backLink %}
+<a href="/" class="govuk-back-link">Back</a>
+{% endblock %}
+
+{% block content %}
+<link href="{{ url_for('static', filename='data-tables.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='data-tables.js') }}"></script>
+<style>
+    li {
+        margin-bottom: 20px;
+    }
+
+    #stats li {
+        margin-bottom: 10px;
+    }
+
+    #stats ol li {
+        margin-bottom: 5px;
+        font-size: 16px;
+    }
+
+    select,
+    input[type="text"] {
+        max-width: 50%;
+    }
+
+    td>select,
+    td>input[type="text"] {
+        max-width: 100%;
+    }
+
+    table.govuk-body-s {
+        border-collapse: collapse;
+        min-width: 100%;
+    }
+
+    table.govuk-body-s th,
+    table.govuk-body-s td {
+        padding: 3px;
+        white-space: nowrap;
+        border: 1px solid #000;
+    }
+
+    table.no-border th,
+    table.no-border td {
+        border: none;
+        padding-bottom: 15px;
+    }
+
+    table.table-3-cols-checkbox tr td:nth-child(1) {
+        width: 5%;
+    }
+
+    table.table-3-cols-checkbox tr td:nth-child(2) {
+        white-space: normal;
+        width: 50%;
+    }
+
+    table.table-3-cols-checkbox tr td:nth-child(3) {
+        width: 45%;
+    }
+
+    table.table-2-cols tr td:nth-child(1) {
+        width: 30%;
+        min-width: 30%;
+        max-width: 30%;
+    }
+
+    table#table-2-cols tr td:nth-child(2) {
+        width: 70%;
+        min-width: 70%;
+        max-width: 70%;
+    }
+
+    div.loading-mask {
+        position: absolute;
+        display: grid;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        align-content: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.8);
+    }
+
+    div.loading-mask img {
+        margin-bottom: 25px;
+    }
+
+    .small-input {
+        padding: 3px;
+        height: 36px;
+        font-size: 16px;
+        border-width: 1.5px;
+    }
+
+    .action-link,
+    .action-link a {
+        white-space: nowrap;
+        color: grey;
+        font-size: 16px;
+    }
+</style>
+<style>
+    div.data-table-data {
+        position: relative;
+        clear: both;
+        overflow-x: scroll;
+        overflow-y: auto;
+        min-height: 300px;
+        max-height: 500px;
+    }
+
+    div.data-table-data table {
+        width: 100%;
+        font-size: 14px;
+    }
+</style>
+<script>
+    raw_cols = []
+    data_cols = []
+    all_rules = []
+    all_data = []
+
+    function get_columns(table, refresh_columns) {
+        $(`#${table}data`).empty()
+        $('#table_filter_columns').empty()
+        $('#select_stats_column').empty()
+        $('#select_filter_column').empty()
+        $('#select_harmonise_column').empty()
+        $('#select_aggregate_groupby').empty()
+        $('#select_aggregate_sum').empty()
+        $(`div#${table}data-container div.loading-mask`).css('visibility', 'visible')
+
+        $.get({
+                url: `./${table}datacolumns`
+            })
+            .done(function (data) {
+                if (table == 'raw') {
+                    raw_cols = data.data
+                    if (data_cols == []) data_cols = raw_cols
+                    $('#table_filter_columns').append('<tr><th></th><th>Column</th><th>Rename</th></tr>')
+                    $('#select_stats_column').append(`<option value="-1">Choose...</option>`)
+                } else {
+                    data_cols = data.data
+                    $('#processed_data').show()
+                }
+                tr = '<thead><tr>'
+
+                for (const [index, col] of data.data.entries()) {
+                    if (table == 'raw') {
+                        tr += `<th><a href="javascript:get_stats(${index})" class="govuk-link">${col}</a></th>`
+                    } else {
+                        tr += `<th>${col}</th>`
+                    }
+
+                    //if (table == 'raw') {
+                    $('#table_filter_columns').append(
+                        `<tr>
+                            <td><input type="checkbox" id="input_filter_columns_column_${index}" name="input_filter_columns_column_${index}" class="_govuk-checkboxes__input" checked></td>
+                            <td>${col}</td>
+                            <td><input type="text" id="input_filter_columns_column_${index}_rename" name="input_filter_columns_column_${index}_rename" value="${col}" class="govuk-input small-input"></td>
+                        </tr>`
+                    )
+                    $('#select_stats_column').append(`<option value="${index}">${col}</option>`)
+                    $('#select_filter_column').append(`<option value="${index}">${col}</option>`)
+                    $('#select_harmonise_column').append(`<option value="${index}">${col}</option>`)
+                    $('#select_aggregate_groupby').append(`<option value="${index}">${col}</option>`)
+                    $('#select_aggregate_sum').append(`<option value="${index}">${col}</option>`)
+                    //}
+                }
+                tr += '</tr></thead><tbody />'
+                $(`#${table}data`).append(tr)
+            })
+            .then(function () {
+                get_data(table)
+            })
+    }
+
+    function get_data(table) {
+        $(`#${table}data > tbody`).empty()
+        $(`div#${table}data-container div.loading-mask`).css('visibility', 'visible')
+
+        $.get({
+                url: `./${table}data?from=${pages[table]['from']}&to=${pages[table]['to']}`
+            })
+            .done(function (data) {
+                all_data = data.data
+                for (const row of data.data) {
+                    tr = '<tr>'
+                    for (const col of row) {
+                        tr += `<td>${col}</td>`
+                    }
+                    tr += '</tr>'
+                    $(`#${table}data > tbody`).append(tr)
+                }
+                $(`#num_${table}rows`).html(`${data.rows}${data.rows == 1 ? ' row' : ' rows'}`)
+
+                $(`div#${table}data-container div.loading-mask`).css('visibility', 'hidden')
+
+                //setTimeout(function () {
+                    new DataTable('table_container', 'array', true, false, false, false)
+                //}, 1000)
+            })
+    }
+
+    function get_stats(column) {
+        $('#stats').empty()
+        if (column > -1) {
+            $.get({
+                    url: `./stats?column=${column}`
+                })
+                .done(function (data) {
+                    console.log('stats', data)
+                    $('#stats').append(`<li><strong>Number of unique values</strong>: ${data['nunique']}</li>`)
+                    $('#stats').append(
+                        `<li><strong>Number of values (excluding blanks)</strong>: ${data['count']}</li>`)
+                    $('#stats').append(
+                        `<li><strong>Number of values (including blanks)</strong>: ${data['size']}</li>`)
+                    unique = ''
+                    for (item of data['unique']) unique += `<li>${item}</li>`
+                    $('#stats').append(`<li><strong>Unique values</strong>:<ol>${unique}</ol></li>`)
+                })
+        }
+    }
+
+    function display_rule() {
+        $('[id^=action_]').hide()
+        $(`#action_${$('#action :selected').val()}`).show()
+    }
+
+    function apply_rule(rule_name) {
+        if (rule_name == 'filter_columns') {
+            data = []
+            cols = data_cols.length == 0 ? raw_cols : data_cols
+            for (const [index, col] of cols.entries()) {
+                data.push({
+                    'name': col,
+                    'index': index,
+                    'include': $(`#input_filter_columns_column_${index}`).is(':checked'),
+                    'new_name': $(`#input_filter_columns_column_${index}_rename`).val()
+                })
+            }
+        } else if (rule_name == 'filter_column_values') {
+            if ($('#text_filter_column_values').val() == '')
+                return
+
+            data = {
+                'name': $('#select_filter_column :selected').text(),
+                'index': $('#select_filter_column :selected').val(),
+                'type': $('#select_filter_column_values_type :selected').val(),
+                'value': $('#text_filter_column_values').val()
+            }
+            $('#text_filter_column_values').val('')
+        } else if (rule_name == 'harmonise_column_values') {
+            if ($('#text_harmonise_column_replace').val() == '' || $('#text_harmonise_column_with').val() == '')
+                return
+
+            data = {
+                'name': $('#select_harmonise_column :selected').text(),
+                'index': $('#select_harmonise_column :selected').val(),
+                'replace': $('#text_harmonise_column_replace').val(),
+                'with': $('#text_harmonise_column_with').val()
+            }
+            $('#text_harmonise_column_replace').val('')
+            $('#text_harmonise_column_with').val('')
+        } else if (rule_name == 'aggregate') {
+            data = {
+                'name': $('#select_aggregate_groupby :selected').text(),
+                'index': $('#select_aggregate_groupby :selected').val(),
+                'aggregate_name': $('#select_aggregate_sum :selected').text(),
+                'aggregate': $('#select_aggregate_sum :selected').val(),
+                'action': 'sum'
+            }
+        }
+        /*
+        transpose
+        add_header
+        select-worksheet
+        select_datarange
+        orderby
+        */
+
+        fd = new FormData()
+        fd.append('rule', rule_name)
+        fd.append('data', JSON.stringify(data))
+        $.post({
+                url: './addrule',
+                data: fd,
+                processData: false,
+                contentType: false
+            })
+            .done(function () {
+                update_rules()
+            })
+    }
+
+    function update_rules() {
+        $('[id^=action_]').hide()
+        $('#action option[value=""]').prop('selected', true)
+
+        $.get({
+                url: './listrules'
+            })
+            .done(function (data) {
+                all_rules = data
+                refresh_columns = false
+                $('#current_rules').empty()
+
+                for (const [index, rule] of data.entries()) {
+                    li = `<li><strong>${rule.rule.replace(/_/g, ' ')}</strong>`
+                    if (rule.rule == 'filter_columns') {
+                        included = ''
+                        excluded = ''
+                        for (const item of JSON.parse(rule.data)) {
+                            if (item.include) {
+                                if (item.name != item.new_name) included += (included == '' ? '' : ', ') + item
+                                    .new_name + ' (' + item.name + ')'
+                                else included += (included == '' ? '' : ', ') + item.name
+                            } else {
+                                excluded += (excluded == '' ? '' : ', ') + item.name
+                            }
+                        }
+                        if (included != '') li += '<br><i>Columns included</i>: ' + included
+                        if (excluded != '') li += '<br><i>Columns excluded</i>: ' + excluded
+                        refresh_columns = true
+                    } else if (rule.rule == 'filter_column_values') {
+                        item = JSON.parse(rule.data)
+                        li += `<br>Column <i>${item.name}</i> ${item.type} "${item.value}"`
+                    } else if (rule.rule == 'harmonise_column_values') {
+                        item = JSON.parse(rule.data)
+                        li += `<br>Column <i>${item.name}</i> replace "${item.replace}" with "${item.with}"`
+                    } else if (rule.rule == 'aggregate') {
+                        item = JSON.parse(rule.data)
+                        li += `<br>Group by <i>${item.name}</i>, ${item.action} "${item.aggregate_name}"`
+                        refresh_columns = true
+                    }
+                    li +=
+                        ` <span class="action-link">[ <a href="javascript:amend_rule('delete', ${index})" class="govuk-link">delete</a> ]</span></li>`
+                    $('#current_rules').append(li)
+                }
+
+                get_columns('processed', refresh_columns)
+            })
+    }
+
+    function amend_rule(action, position) {
+        fd = new FormData()
+        fd.append('position', position)
+        $.post({
+                url: `./${action}rule`,
+                data: fd,
+                processData: false,
+                contentType: false
+            })
+            .done(function () {
+                update_rules()
+            })
+    }
+
+    pages = {
+        'raw': {
+            'from': 1,
+            'to': 5
+        },
+        'processed': {
+            'from': 1,
+            'to': 5
+        },
+        'min': 5,
+        'max': 1000
+    }
+
+    function update_paging(table) {
+        function is_numeric(n) {
+            return !isNaN(parseFloat(n)) && isFinite(n)
+        }
+
+        from = document.getElementById(`${table}_data_row_from`).value
+        to = document.getElementById(`${table}_data_row_to`).value
+        rows = parseInt(document.getElementById(`num_${table}rows`).innerText, 10)
+        console.log('rows', rows)
+
+        if (is_numeric(from) && parseInt(from, 10) > 0) {
+            if (from > (rows - pages['min'])) from = (rows - pages['min'])
+            pages[table]['from'] = parseInt(from, 10)
+        }
+
+        if (is_numeric(to) && parseInt(to, 10) > 0) {
+            if (to < (from + pages['min'])) to = (from + pages['min'])
+            if (to > rows) to = rows
+            pages[table]['to'] = parseInt(to, 10)
+        }
+
+        document.getElementById(`${table}_data_row_from`).value = pages[table]['from']
+        document.getElementById(`${table}_data_row_to`).value = pages[table]['to']
+
+        rows = to - from
+        get_data(table)
+    }
+</script>
+<div class="govuk-grid-row">
+    {% if not file %}
+    <div class="govuk-grid-column-two-thirds">
+        <form method="post" enctype="multipart/form-data"
+            onsubmit="document.getElementById('submit').style.display = 'none'; document.getElementById('loading').style.display = 'inline-block';">
+            <div class="govuk-form-group {{ 'govuk-form-group--error' if form.errors }} govuk-!-margin-bottom-2">
+                <label for="documents" class="govuk-label govuk-label--m">
+                    Upload csv
+                </label>
+                <div id="documents-hint" class="govuk-hint">
+                    The files must be a CSV and be smaller than 10MB
+                </div>
+
+                <input id="file" type="file" name="file" accept=".csv"
+                    class="govuk-file-upload govuk-!-margin-bottom-4">
+            </div>
+            <img id="loading" src="{{ url_for('static', filename='assets/images/loading.gif') }}" width="41" height="41"
+                style="display: none; margin-bottom: 20px;" alt="">
+            <input id="submit" type="submit" name="button_clicked" value="Upload file" class="govuk-button"
+                data-module="govuk-button">
+        </form>
+    </div>
+    {% endif %}
+    {% if file %}
+    <div class="govuk-grid-column-full govuk-body">
+        <h1 class="govuk-heading-m">{{ upload_title }} - {{ time_covered }}</h1>
+        <h4>
+            &nbsp;
+            <span style="float: right;">Showing rows
+                <input type="text" id="raw_data_row_from" name="raw_data_row_from" value="1"
+                    class="govuk-input small-input" style="width: 50px; height: 30px;" onchange="update_paging('raw')">
+                to
+                <input type="text" id="raw_data_row_to" name="raw_data_row_to" value="5" class="govuk-input small-input"
+                    style="width: 50px; height: 30px;" onchange="update_paging('raw')">
+                of <span id="num_rawrows"></span>
+            </span>
+        </h4>
+        <div class="data-table-data">
+            <table id="rawdata" class="govuk-table-s table_container" style="font-size: 14px;"></table>
+        </div>
+        <!--<div id="rawdata-container" class="data-table">
+            <div class="loading-mask">
+                <img id="loading" src="{{ url_for('static', filename='assets/images/loading.gif') }}" width="41"
+                    height="41" alt="">
+            </div>
+            <div class="data-table-data">
+                <table id="rawdata" class="govuk-table-s table_container" style="font-size: 14px;"></table>
+            </div>
+        </div>-->
+        <script>
+            get_columns('raw', false)
+        </script>
+
+        <div>
+            <p>
+                Stats
+                <select id="select_stats_column" class="govuk-select small-input"
+                    onchange="get_stats(this.selectedIndex - 1)"></select>
+            </p>
+            <ul id="stats"></ul>
+        </div>
+
+        <h3>Data cleaning</h3>
+        <input type="button" name="button_clicked" value="Import pipeline" class="govuk-button">
+
+        <p>Current rules</p>
+        <ol id="current_rules"></ol>
+        Add rule
+        <form class="rule">
+            <select id="action" name="rules" class="govuk-select" style="margin-bottom: 20px;"
+                onchange="display_rule()">
+                <option value="">Choose...</option>
+                <option value="filter_columns">Filter columns</option>
+                <option value="filter_column_values">Filter column values</option>
+                <option value="harmonise_column_values">Harmonise column values</option>
+                <option value="aggregate">Group and sum</option>
+            </select>
+            <div id="action_filter_columns" style="display: none;">
+                <table id="table_filter_columns" class="table-3-cols-checkbox govuk-body-s no-border"></table>
+                <input type="button" name="button_clicked" value="Apply rule" class="govuk-button"
+                    onclick="apply_rule('filter_columns')">
+            </div>
+
+            <div id="action_filter_column_values" style="display: none;">
+                <table id="table_filter_columns_values" class="table-2-cols govuk-body-s no-border">
+                    <tr>
+                        <td>Column</td>
+                        <td><select id="select_filter_column" class="govuk-select small-input"></select></td>
+                    </tr>
+                    <tr>
+                        <td>Match type</td>
+                        <td><select id="select_filter_column_values_type" class="govuk-select small-input">
+                                <option value="starts with">Starts with</option>
+                                <option value="ends with">Ends with</option>
+                                <option value="contains">Contains</option>
+                                <option value="matches">Matches</option>
+                            </select></td>
+                    </tr>
+                    <tr>
+                        <td>Value</td>
+                        <td><input type="text" id="text_filter_column_values" name="text_filter_column_values"
+                                class="govuk-input small-input"><br>
+                            Separate multiple values with a comma</td>
+                    </tr>
+                </table>
+                <input type="button" name="button_clicked" value="Apply rule" class="govuk-button"
+                    onclick="apply_rule('filter_column_values')">
+            </div>
+
+            <div id="action_harmonise_column_values" style="display: none;">
+                <table id="table_harmonise_columns_values" class="table-2-cols govuk-body-s no-border">
+                    <tr>
+                        <td>Column</td>
+                        <td><select id="select_harmonise_column" class="govuk-select small-input"></select></td>
+                    </tr>
+                    <tr>
+                        <td>Replace</td>
+                        <td><input type="text" id="text_harmonise_column_replace" name="text_harmonise_column_values"
+                                class="govuk-input small-input"><br>
+                            Separate multiple values with a comma</td>
+                    </tr>
+                    <tr>
+                        <td>With</td>
+                        <td><input type="text" id="text_harmonise_column_with" name="text_harmonise_column_values"
+                                class="govuk-input small-input"></td>
+                    </tr>
+                </table>
+                <input type="button" name="button_clicked" value="Apply rule" class="govuk-button"
+                    onclick="apply_rule('harmonise_column_values')">
+            </div>
+
+            <div id="action_aggregate" style="display: none;">
+                <table id="table_aggregate" class="table-2-cols govuk-body-s no-border">
+                    <tr>
+                        <td>Group by</td>
+                        <td><select id="select_aggregate_groupby" class="govuk-select small-input"></select></td>
+                    </tr>
+                    <tr>
+                        <td>Sum</td>
+                        <td><select id="select_aggregate_sum" class="govuk-select small-input"></select></td>
+                    </tr>
+                </table>
+                <input type="button" name="button_clicked" value="Apply rule" class="govuk-button"
+                    onclick="apply_rule('aggregate')">
+            </div>
+        </form>
+
+        <div id="processed_data" style="display: none;">
+            <h4>
+                New data
+                <span style="float: right;">Showing rows
+                    <input type="text" id="processed_data_row_from" name="processed_data_row_from" value="1"
+                        class="govuk-input small-input" style="width: 50px; height: 30px;"
+                        onchange="update_paging('processed')"> to
+                    <input type="text" id="processed_data_row_to" name="processed_data_row_to" value="5"
+                        class="govuk-input small-input" style="width: 50px; height: 30px;"
+                        onchange="update_paging('processed')">
+                    of <span id="num_processedrows"></span>
+                </span>
+            </h4>
+
+            <div id="processeddata-container" class="data-table">
+                <div class="loading-mask">
+                    <img id="loading" src="{{ url_for('static', filename='assets/images/loading.gif') }}" width="41"
+                        height="41" alt="">
+                </div>
+                <div class="data-table-data">
+                    <table id="processeddata" class="govuk-table-s table_container1" style="font-size: 14px;"></table>
+                </div>
+            </div>
+            <input type="button" name="button_clicked" value="Save pipeline" class="govuk-button">
+            <p>
+                <a href="javascript:barchart('#barchart', all_data)">Chart</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a
+                    href="#">Download this dataset</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#" class="govuk-link">Access this dataset via
+                    API</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#" class="govuk-link">Share &amp; collaborate on this dataset</a>
+            </p>
+
+            <div id="barchart"></div>
+            <h4>Data visibility</h4>
+        </div>
+    </div>
+    {% endif %}
+</div>
+<script>
+    (function () {
+        //new DataTable('table_container', 'array', true, true, true, false)
+    })()
+</script>
+<script>
+    function barchart(obj, data) {
+        var svg = d3.select(obj).append('svg:svg'),
+            margin = {
+                top: 20,
+                right: 20,
+                bottom: 30,
+                left: 40
+            },
+            width = 300 - margin.left - margin.right,
+            height = 200 - margin.top - margin.bottom
+
+        var x = d3.scaleBand().rangeRound([0, width]).padding(0.1),
+            y = d3.scaleLinear().rangeRound([height, 0]),
+            y1 = d3.scaleLinear().rangeRound([height, 0])
+
+        var g = svg.append('g')
+            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+
+        x.domain(data.map(function (d) {
+            return d[0]
+        }))
+
+
+        y.domain([0, d3.max(data, function (d) {
+            return parseInt(d[1])
+        })])
+
+        // Inserts the x-axis line text
+        g.append('g')
+            .attr('class', 'axis axis--x')
+            .attr('transform', 'translate(0,' + (height) + ')')
+            .call(d3.axisBottom(x))
+            .selectAll('text')
+            .attr('y', 0)
+            .attr('x', 8)
+            .attr('dy', '1.75em')
+            .attr('transform', 'rotate(340)')
+            .style('text-anchor', 'end')
+
+        // Inserts the y-axis line
+        // d3.format('.2s'), formats the line fx from 1300 to 1.3 thousand
+        g.append('g')
+            .attr('class', 'axis axis--y')
+            .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format('2.2s')))
+            .append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('y', 0 - margin.left)
+            .attr('x', 0 - (height / 2))
+            .attr('dy', '0.71em')
+            .attr('text-anchor', 'end')
+
+        // Insert all the bars
+        g.selectAll('.bar')
+            .data(data)
+            .enter().append('rect')
+            .attr('class', 'bar')
+            .attr('x', function (d) {
+                return x(d[0])
+            })
+            .attr('y', function (d) {
+                return y(d[1])
+            })
+            .attr('width', x.bandwidth())
+            .attr('height', function (d) {
+                return height - y(d[1])
+            })
+    }
+</script>
+{% endblock %}
