@@ -1,5 +1,5 @@
-from grc import create_app
-from grc.config import Config
+from datastore import create_app
+from datastore.config import Config
 
 
 def test_home_page():
