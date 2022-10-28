@@ -37,13 +37,14 @@ def create_app(test_config=None):
 
 
     # Configure Redis for storing the session data on the server-side
-    app.config['SESSION_TYPE'] = 'redis'
-    app.config['SESSION_PERMANENT'] = False
-    app.config['SESSION_USE_SIGNER'] = True
-    app.config['SESSION_REDIS'] = redis.from_url(f"redis://{app.config['REDIS_HOST']}:{app.config['REDIS_PORT']}")
+    if app.config['REDIS_HOST'] and app.config['REDIS_PORT'] is not None:
+        app.config['SESSION_TYPE'] = 'redis'
+        app.config['SESSION_PERMANENT'] = False
+        app.config['SESSION_USE_SIGNER'] = True
+        app.config['SESSION_REDIS'] = redis.from_url(f"redis://{app.config['REDIS_HOST']}:{app.config['REDIS_PORT']}")
 
-    # Create and initialize the Flask-Session object AFTER `app` has been configured
-    server_session = Session(app)
+        # Create and initialize the Flask-Session object AFTER `app` has been configured
+        server_session = Session(app)
 
     # Show "Service unavailable" page if the config setting it set
     if app.config['MAINTENANCE_MODE'] == 'ON':
