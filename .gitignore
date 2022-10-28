@@ -28,6 +28,7 @@ instance/config.py
 .unotes/*
 Notes/*
 notes/*
-notes.txt
+*notes.txt
 .DS_Store
 *.csv
+/api/lambdas/awslambda-psycopg2/*

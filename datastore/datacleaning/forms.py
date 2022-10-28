@@ -40,7 +40,7 @@ class OverseasCheckForm(FlaskForm):
             (True, 'Yes'),
             (False, 'No')
         ],
-        validators=[DataRequired(message='Select if you ever been issued a Gender Recognition Certificate')]
+        validators=[DataRequired(message='Select if you ever been issued a Equality Data Store')]
     )
 
 

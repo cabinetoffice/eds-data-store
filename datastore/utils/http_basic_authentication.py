@@ -47,6 +47,6 @@ class HttpBasicAuthentication:
             pass
 
         response = Response('', 401)
-        response.headers.add('WWW-Authenticate', 'Basic realm="Gender Recognition Certificate service"')
+        response.headers.add('WWW-Authenticate', 'Basic realm="Equality Data Store service"')
 
         abort(response)
