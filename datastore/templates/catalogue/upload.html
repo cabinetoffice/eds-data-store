@@ -1,4 +1,7 @@
 {% extends 'base.html' %}
+{% import "govuk-design-system-templates/error-summary.html" as error_summary %}
+{% import "govuk-design-system-templates/text-input.html" as textInput %}
+{% import "govuk-design-system-templates/select-input.html" as selectInput %}
 
 {% block title %}Demo{% endblock %}
 
@@ -11,41 +14,153 @@
     <div class="govuk-grid-column-two-thirds">
         <form method="post" enctype="multipart/form-data"
             onsubmit="document.getElementById('submit').style.display = 'none'; document.getElementById('loading').style.display = 'inline-block';">
+            {{ form.csrf_token }}
+
             <div class="govuk-form-group {{ 'govuk-form-group--error' if form.errors }} govuk-!-margin-bottom-2">
-                <label for="documents" class="govuk-label govuk-label--m">
-                    Upload csv
-                </label>
-                <div id="documents-hint" class="govuk-hint">
-                    The files must be a CSV and be smaller than 10MB
-                </div>
+                <fieldset class="govuk-fieldset" aria-describedby="fieldset-hint">
+                    <label for="documents" class="govuk-label govuk-label--m">
+                        Upload CSV
+                    </label>
+                    {% if form.file.errors %}
+                        <p id="documents-error" class="govuk-error-message">
+                            {% for error in form.errors %}
+                                {% for e in form[error].errors %}
+                                    <span class="govuk-visually-hidden">Error:</span> {{ e }}
+                                {% endfor %}
+                            {% endfor %}
+                        </p>
+                    {% endif %}
 
-                <input id="file" type="file" name="file" accept=".csv"
-                    class="govuk-file-upload govuk-!-margin-bottom-4">
+                    <div id="documents-hint" class="govuk-hint">
+                        The files must be a CSV and be smaller than 10MB
+                    </div>
+                    <input id="file" type="file" name="file" accept=".csv"
+                        class="govuk-file-upload govuk-!-margin-bottom-4 {{ 'govuk-input--error' if form.file.errors }}">
+
+                    {{ textInput.renderFor(
+                        form,
+                        fieldName='title',
+                        textInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Title' }
+                        }
+                    ) }}
+
+                    {{ textInput.renderFor(
+                        form,
+                        fieldName='description',
+                        textInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Description' }
+                        }
+                    ) }}
+
+                    {{ textInput.renderFor(
+                        form,
+                        fieldName='measure_title',
+                        textInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Measure title' }
+                        }
+                    ) }}
+
+                    {{ selectInput.renderFor(
+                        form,
+                        fieldName='area_covered',
+                        selectInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Area covered' },
+                            'options': [{ 'Value': 1, 'Option': 'England' }, { 'Value': 2, 'Option': 'Wales' }, { 'Value': 3, 'Option': 'Scotland' }, { 'Value': 4, 'Option': 'Northern Ireland' }, { 'Value': 5, 'Option': 'Overseas' }]
+                        }
+                    ) }}
+
+                    {{ selectInput.renderFor(
+                        form,
+                        fieldName='lowest_level_of_geography',
+                        selectInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Lowest level of geography' }
+                        }
+                    ) }}
+
+                    {{ selectInput.renderFor(
+                        form,
+                        fieldName='publisher',
+                        selectInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Publisher' }
+                        }
+                    ) }}
+
+                    {{ selectInput.renderFor(
+                        form,
+                        fieldName='publisher_type',
+                        selectInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Publisher type' }
+                        }
+                    ) }}
+
+                    {{ selectInput.renderFor(
+                        form,
+                        fieldName='release_frequency',
+                        selectInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Frequency of release' }
+                        }
+                    ) }}
+
+
+                    {{ selectInput.renderFor(
+                        form,
+                        fieldName='topic',
+                        selectInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Topic' }
+                        }
+                    ) }}
+
+                    {{ selectInput.renderFor(
+                        form,
+                        fieldName='subtopic',
+                        selectInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Sub topic' }
+                        }
+                    ) }}
+
+                    {{ selectInput.renderFor(
+                        form,
+                        fieldName='type_of_statistic',
+                        selectInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Type of statistic' }
+                        }
+                    ) }}
+
+                    {{ textInput.renderFor(
+                        form,
+                        fieldName='time_covered',
+                        textInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Time covered' }
+                        }
+                    ) }}
+
+                    {{ selectInput.renderFor(
+                        form,
+                        fieldName='classification',
+                        selectInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Classification' }
+                        }
+                    ) }}
+
+                    {{ selectInput.renderFor(
+                        form,
+                        fieldName='characteristics',
+                        selectInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Characteristics' }
+                        }
+                    ) }}
+
+                    {{ selectInput.renderFor(
+                        form,
+                        fieldName='characteristics_options',
+                        selectInputForOptions={
+                            'labelOptions': { 'htmlOrText': 'Characteristics options' }
+                        }
+                    ) }}
+
+                </fieldset>
             </div>
-
-
-
-
-
-Title
-Description
-Measure title
-Topic
-Sub topic
-Lowest level of geography
-Type of statistic
-Frequency of release
-Time covered
-Upload title
-Upload filename
-S3 path
-Filesize
-
-
-
-
-
-
 
             <img id="loading" src="{{ url_for('static', filename='assets/images/loading.gif') }}" width="41" height="41"
                 style="display: none; margin-bottom: 20px;" alt="">
@@ -54,4 +169,44 @@ Filesize
         </form>
     </div>
 </div>
+<script>
+    function getOptions() {
+        const options = ['Lowest level of geography', 'Publisher', 'Publisher type', 'Release frequency', 'Topic', 'Subtopic', 'Type of statistic', 'Classification', 'Characteristics', 'Characteristics options']
+
+        function createOption(el, value, text) {
+            const selectOption = document.createElement('option')
+            selectOption.value = value
+            selectOption.text = text
+            el.appendChild(selectOption)
+        }
+
+        function createOptions(el, options) {
+            for (const option of options) {
+                createOption(el, option.id, option.id + ' - ' + option.value)
+            }
+        }
+
+        for (const option of options) {
+            const category = option.toLowerCase().replace(/ /g, '_')
+            const select = document.getElementById(category)
+            console.log(category)
+
+            if (localStorage.getItem(`options_${category}`)) {
+                createOptions(select, JSON.parse(localStorage.getItem(`options_${category}`)))
+            } else {
+                fetch(`https://api.equality-data-store.cabinetoffice.gov.uk/categories?key=${category}`)
+                    .then(response => response.json())
+                    .then(options => {
+                        localStorage.setItem(`options_${category}`, JSON.stringify(options))
+                        createOptions(select, options)
+                    })
+                    .catch((err) => {
+                        console.log(`ERROR: ${err}`)
+                    })
+            }
+        }
+    }
+
+    getOptions()
+</script>
 {% endblock %}

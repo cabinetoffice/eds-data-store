@@ -46,9 +46,11 @@
         <form method="post"
             onsubmit="document.getElementById('submit').style.display = 'none'; document.getElementById('loading').style.display = 'inline-block';">
             <div class="govuk-form-group {{ 'govuk-form-group--error' if form.errors }} govuk-!-margin-bottom-2">
-                <label for="documents" class="govuk-label govuk-label--m">
-                    Search
-                </label>
+                <h1 for="documents" class="govuk-label govuk-label--l">
+                    Find equalities data
+                </h1>
+                <p class="govuk-body govuk-!-margin-bottom-2">Find data on outcomes by characteristics including ethnicity and age.</p>
+                <p class="govuk-body" style="color: #aaa;">Enter a keyword for example, ‘employment’ or ‘stop and search’.</p>
 
                 <input id="query" type="text" name="query" value="{{ query }}"
                     class="govuk-input govuk-!-margin-bottom-4">
@@ -301,7 +303,7 @@
             if (localStorage.getItem(`options_${category}`)) {
                 createOptions(id, JSON.parse(localStorage.getItem(`options_${category}`)))
             } else {
-                fetch(`https://api.equality-data-store.cabinetoffice.gov.uk/categories?key=${category}`)//, { mode: 'no-cors'})
+                fetch(`https://api.equality-data-store.cabinetoffice.gov.uk/categories?key=${category}`)
                     .then(response => response.json())
                     .then(options => {
                         localStorage.setItem(`options_${category}`, JSON.stringify(options))

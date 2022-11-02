@@ -24,6 +24,11 @@ class Config:
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
+    API_URL = "https://api.equality-data-store.cabinetoffice.gov.uk"
+    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    AWS_REGION = os.environ.get("AWS_REGION")
+    AWS_BUCKET_NAME = os.environ.get("AWS_BUCKET_NAME")
     REDIS_HOST = os.environ.get("REDIS_HOST")
     REDIS_PORT = os.environ.get("REDIS_PORT")
     REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")

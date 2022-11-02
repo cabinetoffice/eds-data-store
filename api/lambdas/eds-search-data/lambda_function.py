@@ -1,4 +1,5 @@
 import json
+import base64
 import secrets_manager
 import postgres
 
@@ -32,24 +33,30 @@ def lambda_handler(event, context):
 
     options = get_querystring(event, 'options')
     if options is not None:
-        where = ''
-        options = json.loads(options)
-        for option in options:
-            field = option['option']
-            if field == 'ethnicity_classification': field = ''  # Need to scan data for this field
-            if field == 'publisher': field = 'publisher_code'
-            if field == 'release_frequency': field = 'frequency_of_release'
-            if field != '':
-                where += f"(normalized_data.{postgres.escape_sql(field)} = '{postgres.escape_sql(option['value'])}') OR "
+        try:
+            where = ''
+            options = json.loads(base64.b64decode(options).decode('utf-8'))
+            for option in options:
+                field = option['option']
+                if field == 'ethnicity_classification': field = ''  # Need to scan data for this field
+                if field == 'publisher': field = 'publisher_code'
+                if field == 'release_frequency': field = 'frequency_of_release'
+                if field != '':
+                    where += f"(normalized_data.{postgres.escape_sql(field)} = '{postgres.escape_sql(option['value'])}') OR "
 
-        if where != '':
-            sql += f" AND ({where[: -4]})"
+            if where != '':
+                sql += f" AND ({where[: -4]})"
+        except e as Exception:
+            print(e)
 
     credentials = secrets_manager.get_secret('eds-postgresql')
     conn = postgres.db_conn(credentials, database='eds')
     cursor = conn.cursor(cursor_factory=postgres.RealDictCursor)
     cursor.execute(sql)
     results = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
 
     return {
         'statusCode': 200,

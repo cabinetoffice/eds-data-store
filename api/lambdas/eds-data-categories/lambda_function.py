@@ -24,12 +24,18 @@ def lambda_handler(event, context):
         sql = 'SELECT id, value FROM "Sub_topic" ORDER BY id ASC'
     elif key == 'type_of_statistic':
         sql = 'SELECT id, value FROM "Type_of_statistic" ORDER BY id ASC'
+    elif key == 'classification':
+        sql = 'SELECT id, title AS value FROM "Classification" ORDER BY id ASC'
     elif key == 'characteristics':
         sql = 'SELECT id, value FROM "Characteristics" ORDER BY id ASC'
+    elif key == 'characteristics_options':
+        sql = 'SELECT id, value FROM "Characteristics_options" ORDER BY id ASC'
     else:
         return {
             'statusCode': 404,
             'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': True,
                 'Content-Type': 'application/json'
             },
             'body': json.dumps({ 'error': f'key {key} not available' })
@@ -40,6 +46,9 @@ def lambda_handler(event, context):
     cursor = conn.cursor(cursor_factory=postgres.RealDictCursor)
     cursor.execute(sql)
     results = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
 
     return {
         'statusCode': 200,
