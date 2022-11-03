@@ -4,8 +4,8 @@ from datetime import timedelta
 from flask import Flask, g, session
 from flask_migrate import Migrate
 from flask_uuid import FlaskUUID
-from flask_session import Session
-import redis
+#from flask_session import Session
+#import redis
 from datastore.models import db
 from datastore.utils import filters
 from datastore.config import Config, DevConfig, TestConfig
@@ -36,15 +36,15 @@ def create_app(test_config=None):
         CustomErrorHandlers(app)
 
 
-    # Configure Redis for storing the session data on the server-side
-    if app.config['REDIS_HOST'] and app.config['REDIS_PORT'] is not None:
-        app.config['SESSION_TYPE'] = 'redis'
-        app.config['SESSION_PERMANENT'] = False
-        app.config['SESSION_USE_SIGNER'] = True
-        app.config['SESSION_REDIS'] = redis.from_url(f"redis://{app.config['REDIS_HOST']}:{app.config['REDIS_PORT']}")
+    ## Configure Redis for storing the session data on the server-side
+    #if app.config['REDIS_HOST'] and app.config['REDIS_PORT'] is not None:
+    #    app.config['SESSION_TYPE'] = 'redis'
+    #    app.config['SESSION_PERMANENT'] = False
+    #    app.config['SESSION_USE_SIGNER'] = True
+    #    app.config['SESSION_REDIS'] = redis.from_url(f"redis://{app.config['REDIS_HOST']}:{app.config['REDIS_PORT']}")
 
-        # Create and initialize the Flask-Session object AFTER `app` has been configured
-        server_session = Session(app)
+    #    # Create and initialize the Flask-Session object AFTER `app` has been configured
+    #    server_session = Session(app)
 
     # Show "Service unavailable" page if the config setting it set
     if app.config['MAINTENANCE_MODE'] == 'ON':
