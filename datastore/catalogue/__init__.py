@@ -79,7 +79,7 @@ def viewData(file: str):
             response = requests.get(f"{current_app.config['API_URL']}/data?bucket={bucket}&key={key_value}&return_type=csv")
             data = response.text
             data = pd.read_csv(io.StringIO(data))
-            session[file] = data
+            #session[file] = data
             columns = data.columns.tolist()
             data = data.values.tolist()
 
