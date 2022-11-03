@@ -30,7 +30,7 @@
 </style>
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-full govuk-body">
-        {% if not data.empty %}
+        {% if not data.empty and not columns.empty %}
         <h1 class="govuk-heading-m">{{ upload_title }} - {{ time_covered }}</h1>
 
         <div class="data-table-data">
@@ -70,3 +70,12 @@
     })()
 </script>
 {% endblock %}
+<!--
+columns: {{ columns }}
+
+data: {{ data }}
+
+bucket: {{ bucket }}
+
+key_value: {{ key_value }}
+-->
