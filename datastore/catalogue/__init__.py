@@ -53,7 +53,15 @@ def viewData(file: str):
     if file in session and 1==2:
         data = session[file]
     else:
-        if 'datasets' in session:
+        if request.method == 'GET':
+            bucket = request.args.get('bucket')
+            key_value = request.args.get('key_value')
+        
+        elif request.method == 'POST':
+            bucket = request.form['bucket']
+            key_value = request.form['key_value']
+
+        elif 'datasets' in session:
             datasets = session['datasets']
             for row in datasets:
                 if str(row['id']) == file:
@@ -62,10 +70,6 @@ def viewData(file: str):
                     upload_title = row['upload_title']
                     time_covered = row['time_covered']
                     break
-
-        elif request.method == 'POST':
-            bucket = request.form['bucket']
-            key_value = request.form['key_value']
 
         print(f'bucket: {bucket}', flush=True)
         print(f'key_value: {key_value}', flush=True)

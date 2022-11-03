@@ -90,7 +90,7 @@
                         {% for row in data %}
                         <tr>
                             <td><input type="checkbox" name="key_value" value="{{ row.key_value }}" onclick="enableDownload()">
-                                <a href="{{ url_for('api.viewData', file=row.id) }}" class="govuk-link">{{ row.title }}</a></td>
+                                <a href="{{ url_for('api.viewData', file=row.id) }}?bucket={{ row.bucket }}&key_value={{ row.key_value }}" class="govuk-link">{{ row.title }}</a></td>
                             <td>{{ row.time_covered }}</td>
                             <td>{{ row.topic }}</td>
                             <td>{{ row.publisher_name }}</td>
